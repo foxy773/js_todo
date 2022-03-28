@@ -1,7 +1,3 @@
-let filteredCountries = []
-let setupDone = false
-let searchText = ""
-
 async function fetchCountries() {
 	const API = `https://restcountries.com/v3.1/all`;
 
@@ -11,27 +7,58 @@ async function fetchCountries() {
 	return results;
  }
 
- // To be called on every change.
-const filteredList = function() {
+const filteredList = function(search) {	
 	let filteredList = filteredCountries.filter((country) => {
 		return country.name.common
 		.toLowerCase()
-		.includes(searchText)
+		.includes(search)
 	})
-	console.log(filteredList)
+
+	const todoList = document.querySelector("#todo-list")
+	todoList.innerHTML = ""
 	setUpCountries(filteredList)
+	storeInLocal(filteredList)
+	
+}
+
+const search = document.querySelector("#new-todo").addEventListener("input", function (e){
+	filteredList(e.target.value.toLowerCase())
+})
+
+const setUpEventListeners = function (array) {
+	const allCheckBoxes = document.querySelectorAll(".complete")
+	const input = document.querySelector("#new-todo")
+	
+	allCheckBoxes.forEach((button, index) => {
+		 button.addEventListener("click", function (e) {
+			  toggleDone(array[index])
+			  filteredList("")
+		 })
+	});
+
+	input.addEventListener("keyup", function (e) {
+		const enter = 13
+
+		if (e.keyCode === enter) {
+			input.blur()
+		}
+	})
+}
+
+function toggleDone(country){
+	return country.done = !country.done
 }
 
 const setUpCountries = function (array) {
 	array.map((country) => {
 
 		// Creates HTML elements.
-		const todoList = document.querySelector("#todo-list") //ul
-		const li = document.createElement("li")					//li
-		const divView = document.createElement("div")			//div
-		const checkButton = document.createElement("button")	//button
-		const countryName = document.createElement("label")	//label
-		const removeButton = document.createElement("button")	//button
+		const todoList = document.querySelector("#todo-list")
+		const li = document.createElement("li")
+		const divView = document.createElement("div")
+		const checkButton = document.createElement("button")	
+		const countryName = document.createElement("label")
+		const removeButton = document.createElement("button")
 
 		// Gives elements classes.
 		divView.className = "view"
@@ -53,23 +80,23 @@ const setUpCountries = function (array) {
 		divView.appendChild(checkButton)
 		divView.appendChild(countryName)
 		divView.appendChild(removeButton)
-
 	})
+	setUpEventListeners(array)
 }
 
 async function organizeArray() {
 	let unorganized = await fetchCountries()
  	let organized = []
+
  	unorganized.forEach((country) => {
 		country = {...country, done:false}
 		organized.push(country)
  	})
 	 
 	filteredCountries = organized
-	console.log(filteredCountries, "filtered COuntries")
 	setupDone = true
 
-	filteredList()
+	filteredList("")
 }
 
 function storeInLocal() {
@@ -78,15 +105,14 @@ function storeInLocal() {
 
 function getFromLocal() {
 	filteredCountries = JSON.parse(localStorage.getItem("Countries"))
+	filteredList("")
  }
 
-function checkLocalStorage() {   // Checks if localstorage contains any data. If it does it will get the data
+function checkLocalStorage() {   // Checks if localstorage contains any data. If it does it will get the data.
 	if (localStorage.getItem("Countries") !== null || localStorage.length > 0) {
-	  getFromLocal() // LocalStorage is empty
-	  console.log("Getting from Local")
+	  getFromLocal() 					// LocalStorage has data.
 	} else {
-	  organizeArray()
-	  console.log("Not anything in local")
+	  organizeArray()					// LocalStorage has no data and will fetch new data.
 	}
  }
 
